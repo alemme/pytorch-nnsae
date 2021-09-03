@@ -76,29 +76,21 @@ net.lrateIP = lrateIP
 net.decayN = alpha
 net.decayP = beta
 
-# training
-for e in range(1, numEpochs+1):
-    gl_loss = 0
+with torch.no_grad():
+    # training
+    for e in range(1, numEpochs+1):
+        gl_loss = 0
 
-    for i, data in enumerate(dataloader):
-        bpdc.zero_grad()
-        inp = data[0]
-        # forward path
-        out = net(inp.t()).t()
-        # calculate loss
-        loss = loss_fkt(inp, out)
-        loss.backward()
+        for i, data in enumerate(dataloader):
+            inp = data[0]
+            # forward path
+            out = net(inp.t()).t()
+            # calculate loss
+            loss = loss_fkt(inp, out)
+            net.fit(inp.T)
 
-        bpdc.step()
-        # net.bpdc((inp-out).t())
-
-        # non negative constraint
-        net.weights.data[net.weights < 0] = 0
-        # intrinsic plasticity
-        net.ip()
-
-        # log loss
-        gl_loss += loss.item()
+            # log loss
+            gl_loss += loss.item()
 
     # print(f'epoch ({e}\{numEpochs}) loss {gl_loss/numSamples}')
     print('epoch ({}\{}) loss {}'.format(e, numEpochs, gl_loss/numSamples))
